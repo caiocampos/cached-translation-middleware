@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	App        AppConfig
-	Redis      RedisConfig
+	App         AppConfig
+	Redis       RedisConfig
 	Translation TranslationConfig
+	Github      GithubConfig
 }
 
 type AppConfig struct {
@@ -29,6 +30,13 @@ type TranslationConfig struct {
 	Timeout time.Duration
 }
 
+type GithubConfig struct {
+	APIURL    string
+	UserLogin string
+	OrgsLogin []string
+	Timeout   time.Duration
+}
+
 func Load() (*Config, error) {
 	viper.SetConfigFile(".env")
 	viper.SetConfigType("env")
@@ -37,24 +45,34 @@ func Load() (*Config, error) {
 	// Defaults
 	viper.SetDefault("APP_PORT", "8080")
 	viper.SetDefault("APP_ENV", "development")
-	viper.SetDefault("TRANSLATION_API_URL", "http://localhost:5000/translate")
-	viper.SetDefault("TRANSLATION_API_TIMEOUT", "10s")
+	viper.SetDefault("TRANSLATION_API_URL", "http://127.0.0.1:5000/translate")
+	viper.SetDefault("TRANSLATION_API_TIMEOUT", "20s")
 	viper.SetDefault("REDIS_ADDR", "localhost:6379")
+	viper.SetDefault("REDIS_USER", "default")
 	viper.SetDefault("REDIS_PASSWORD", "")
 	viper.SetDefault("REDIS_DB", 0)
-	viper.SetDefault("REDIS_CACHE_TTL", "24h")
+	viper.SetDefault("REDIS_CACHE_TTL", "168h")
+	viper.SetDefault("GITHUB_API_URL", "http://127.0.0.1:5000/translate")
+	viper.SetDefault("GITHUB_API_TIMEOUT", "10s")
+	viper.SetDefault("GITHUB_API_USER_LOGIN", "")
+	viper.SetDefault("GITHUB_API_ORGS_LOGIN", "[]")
 
 	// Ignore error if .env file not found (env vars may be set directly)
 	_ = viper.ReadInConfig()
 
 	translationTimeout, err := time.ParseDuration(viper.GetString("TRANSLATION_API_TIMEOUT"))
 	if err != nil {
-		translationTimeout = 10 * time.Second
+		translationTimeout = 20 * time.Second
+	}
+
+	githubTimeout, err := time.ParseDuration(viper.GetString("GITHUB_API_TIMEOUT"))
+	if err != nil {
+		githubTimeout = 10 * time.Second
 	}
 
 	cacheTTL, err := time.ParseDuration(viper.GetString("REDIS_CACHE_TTL"))
 	if err != nil {
-		cacheTTL = 24 * time.Hour
+		cacheTTL = 168 * time.Hour
 	}
 
 	return &Config{
@@ -71,6 +89,12 @@ func Load() (*Config, error) {
 		Translation: TranslationConfig{
 			APIURL:  viper.GetString("TRANSLATION_API_URL"),
 			Timeout: translationTimeout,
+		},
+		Github: GithubConfig{
+			APIURL:    viper.GetString("GITHUB_API_URL"),
+			Timeout:   githubTimeout,
+			UserLogin: viper.GetString("GITHUB_API_USER_LOGIN"),
+			OrgsLogin: viper.GetStringSlice("GITHUB_API_ORGS_LOGIN"),
 		},
 	}, nil
 }

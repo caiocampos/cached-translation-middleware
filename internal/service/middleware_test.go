@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"cached-translation-middleware/internal/cache"
 	"cached-translation-middleware/internal/model"
@@ -15,17 +16,28 @@ import (
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 type mockCache struct {
-	getResp   *model.TranslationResponse
-	getErr    error
-	setErr    error
-	setCalled bool
+	getResp    *model.TranslationResponse
+	getErr     error
+	getTTLResp *time.Duration
+	getTTLErr  error
+	setErr     error
+	setCalled  bool
 }
 
 func (m *mockCache) Get(_ context.Context, _ *model.TranslationRequest) (*model.TranslationResponse, error) {
 	return m.getResp, m.getErr
 }
 
+func (m *mockCache) GetTTL(_ context.Context, _ *model.TranslationRequest) (*time.Duration, error) {
+	return m.getTTLResp, m.getTTLErr
+}
+
 func (m *mockCache) Set(_ context.Context, _ *model.TranslationRequest, _ *model.TranslationResponse) error {
+	m.setCalled = true
+	return m.setErr
+}
+
+func (m *mockCache) SetWithTTL(_ context.Context, _ *model.TranslationRequest, _ *model.TranslationResponse, _ time.Duration) error {
 	m.setCalled = true
 	return m.setErr
 }
