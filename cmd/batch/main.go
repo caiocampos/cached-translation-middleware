@@ -3,9 +3,6 @@ package main
 import (
 	"context"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"cached-translation-middleware/cmd/batch/process"
@@ -56,10 +53,6 @@ func main() {
 
 	logger.Info("starting process")
 	process.Process(logger, cfg, githubSvc, middlewareSvc)
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
 
 	logger.Info("shutting down process...")
 

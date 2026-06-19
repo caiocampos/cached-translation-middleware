@@ -15,7 +15,6 @@ func Process(logger *zap.Logger, configuration *config.Config, githubService ser
 	repos := getRepos(logger, configuration.Github, githubService)
 
 	checkAndUpdateTranslation(logger, configuration.Translation, middlewareService, repos)
-
 }
 
 func getRepos(logger *zap.Logger, githubConfig config.GithubConfig, githubService service.GithubService) model.ListUserReposResponse {
