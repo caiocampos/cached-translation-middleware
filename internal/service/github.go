@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -31,7 +32,9 @@ func NewGithubService(apiURL string, client *http.Client) GithubService {
 func (s *githubService) GetRepos(ctx context.Context, userType model.UserType, login string) (*model.ListUserReposResponse, error) {
 	url := strings.Join([]string{s.apiURL, string(userType), login, "repos"}, "/")
 
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
+	log.Println(url)
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create http request: %w", err)
 	}
