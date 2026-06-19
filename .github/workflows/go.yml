@@ -18,8 +18,11 @@ jobs:
       with:
         go-version: 1.26
 
-    - name: Build
-      run: go build -v cmd/server/main.go
+    - name: Build server
+      run: server-build.sh
+
+    - name: Build batch
+      run: bash batch-build.sh
 
     - name: Test
       run: go test -v ./...

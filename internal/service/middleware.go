@@ -90,7 +90,9 @@ func (s *middlewareService) CheckAndUpdateTranslation(ctx context.Context, req *
 		return fmt.Errorf("upstream translation failed: %w", err)
 	}
 
-	if setErr := s.cache.Set(ctx, req, resp); setErr != nil {
+	randomDays := util.GenerateRandomCacheTime(3, 7)
+
+	if setErr := s.cache.SetWithTTL(ctx, req, resp, randomDays); setErr != nil {
 		s.logger.Warn("failed to store translation in cache", zap.Error(setErr))
 	}
 
