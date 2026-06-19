@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"cached-translation-middleware/internal/model"
 )
@@ -35,7 +36,9 @@ func NewGithubService(apiURL string, client *http.Client) GithubService {
 }
 
 func (s *githubService) GetRepos(ctx context.Context, userType UserType, login string) (*model.ListUserReposResponse, error) {
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, s.apiURL, nil)
+	url := strings.Join([]string{s.apiURL, string(userType), login, "repos"}, "/")
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create http request: %w", err)
 	}
@@ -51,10 +54,10 @@ func (s *githubService) GetRepos(ctx context.Context, userType UserType, login s
 		return nil, fmt.Errorf("upstream returned status %d", resp.StatusCode)
 	}
 
-	var Github model.ListUserReposResponse
-	if err := json.NewDecoder(resp.Body).Decode(&Github); err != nil {
+	var repos model.ListUserReposResponse
+	if err := json.NewDecoder(resp.Body).Decode(&repos); err != nil {
 		return nil, fmt.Errorf("decode upstream response: %w", err)
 	}
 
-	return &Github, nil
+	return &repos, nil
 }

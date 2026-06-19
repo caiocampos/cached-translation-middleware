@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/spf13/viper"
@@ -45,14 +46,14 @@ func Load() (*Config, error) {
 	// Defaults
 	viper.SetDefault("APP_PORT", "8080")
 	viper.SetDefault("APP_ENV", "development")
-	viper.SetDefault("TRANSLATION_API_URL", "http://127.0.0.1:5000/translate")
+	viper.SetDefault("TRANSLATION_API_URL", "http://127.0.0.1:5000")
 	viper.SetDefault("TRANSLATION_API_TIMEOUT", "20s")
 	viper.SetDefault("REDIS_ADDR", "localhost:6379")
 	viper.SetDefault("REDIS_USER", "default")
 	viper.SetDefault("REDIS_PASSWORD", "")
 	viper.SetDefault("REDIS_DB", 0)
 	viper.SetDefault("REDIS_CACHE_TTL", "168h")
-	viper.SetDefault("GITHUB_API_URL", "http://127.0.0.1:5000/translate")
+	viper.SetDefault("GITHUB_API_URL", "https://api.github.com")
 	viper.SetDefault("GITHUB_API_TIMEOUT", "10s")
 	viper.SetDefault("GITHUB_API_USER_LOGIN", "")
 	viper.SetDefault("GITHUB_API_ORGS_LOGIN", "[]")
@@ -75,6 +76,17 @@ func Load() (*Config, error) {
 		cacheTTL = 168 * time.Hour
 	}
 
+	var orgsLogin []string
+	orgsLoginString := viper.GetString("GITHUB_API_ORGS_LOGIN")
+	if orgsLoginString == "" {
+		orgsLogin = []string{}
+	} else {
+		err := json.Unmarshal([]byte(orgsLoginString), &orgsLogin)
+		if err != nil {
+			orgsLogin = []string{}
+		}
+	}
+
 	return &Config{
 		App: AppConfig{
 			Port: viper.GetString("APP_PORT"),
@@ -94,7 +106,7 @@ func Load() (*Config, error) {
 			APIURL:    viper.GetString("GITHUB_API_URL"),
 			Timeout:   githubTimeout,
 			UserLogin: viper.GetString("GITHUB_API_USER_LOGIN"),
-			OrgsLogin: viper.GetStringSlice("GITHUB_API_ORGS_LOGIN"),
+			OrgsLogin: orgsLogin,
 		},
 	}, nil
 }

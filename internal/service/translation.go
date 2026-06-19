@@ -33,8 +33,9 @@ func (s *translationService) Translate(ctx context.Context, req *model.Translati
 	if err != nil {
 		return nil, fmt.Errorf("marshal request: %w", err)
 	}
+	url := s.apiURL + "/translate"
 
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, s.apiURL, bytes.NewReader(body))
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("create http request: %w", err)
 	}

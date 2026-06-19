@@ -1,7 +1,7 @@
 package util
 
 import (
-	"fmt"
+	"strings"
 )
 
 func BuildKey(source string, target string, text string) string {
@@ -11,5 +11,5 @@ func BuildKey(source string, target string, text string) string {
 	} else {
 		textHash = GenerateSHA256String(text)
 	}
-	return fmt.Sprintf("translation:%s:%s:%x", source, target, textHash)
+	return strings.Join([]string{"tr", source, target, textHash}, ":")
 }
