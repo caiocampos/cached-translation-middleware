@@ -1,6 +1,7 @@
 package config
 
 import (
+	"cached-translation-middleware/internal/util"
 	"encoding/json"
 	"time"
 
@@ -47,14 +48,14 @@ func Load() (*Config, error) {
 	viper.SetDefault("APP_PORT", "8080")
 	viper.SetDefault("APP_ENV", "development")
 	viper.SetDefault("TRANSLATION_API_URL", "http://127.0.0.1:5000")
-	viper.SetDefault("TRANSLATION_API_TIMEOUT", "20s")
+	viper.SetDefault("TRANSLATION_API_TIMEOUT", util.TwentySecondsString)
 	viper.SetDefault("REDIS_ADDR", "localhost:6379")
 	viper.SetDefault("REDIS_USER", "default")
 	viper.SetDefault("REDIS_PASSWORD", "")
 	viper.SetDefault("REDIS_DB", 0)
-	viper.SetDefault("REDIS_CACHE_TTL", "168h")
+	viper.SetDefault("REDIS_CACHE_TTL", util.SevenDaysString)
 	viper.SetDefault("GITHUB_API_URL", "https://api.github.com")
-	viper.SetDefault("GITHUB_API_TIMEOUT", "10s")
+	viper.SetDefault("GITHUB_API_TIMEOUT", util.TenSecondsString)
 	viper.SetDefault("GITHUB_API_USER_LOGIN", "")
 	viper.SetDefault("GITHUB_API_ORGS_LOGIN", "[]")
 
@@ -63,17 +64,17 @@ func Load() (*Config, error) {
 
 	translationTimeout, err := time.ParseDuration(viper.GetString("TRANSLATION_API_TIMEOUT"))
 	if err != nil {
-		translationTimeout = 20 * time.Second
+		translationTimeout = util.TwentySeconds
 	}
 
 	githubTimeout, err := time.ParseDuration(viper.GetString("GITHUB_API_TIMEOUT"))
 	if err != nil {
-		githubTimeout = 10 * time.Second
+		githubTimeout = util.TenSeconds
 	}
 
 	cacheTTL, err := time.ParseDuration(viper.GetString("REDIS_CACHE_TTL"))
 	if err != nil {
-		cacheTTL = 168 * time.Hour
+		cacheTTL = util.SevenDays
 	}
 
 	var orgsLogin []string
