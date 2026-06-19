@@ -1,3 +1,3 @@
 #!/bin/bash
 
-go build -v cmd/batch/main.go
+go build -o batch -v cmd/batch/main.go
