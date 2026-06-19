@@ -143,3 +143,10 @@ type RepoItem struct {
 }
 
 type ListUserReposResponse []RepoItem
+
+type UserType string
+
+const (
+	UserTypeUser UserType = "users"
+	UserTypeOrg  UserType = "orgs"
+)

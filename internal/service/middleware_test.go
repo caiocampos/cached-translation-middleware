@@ -53,7 +53,7 @@ func (m *mockTranslation) Translate(_ context.Context, _ *model.TranslationReque
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-func TestMiddlewareService_CacheHit(t *testing.T) {
+func TestMiddlewareService_Translate_CacheHit(t *testing.T) {
 	cached := &model.TranslationResponse{TranslatedText: "Hola"}
 	mc := &mockCache{getResp: cached, getErr: nil}
 	mt := &mockTranslation{}
@@ -73,7 +73,7 @@ func TestMiddlewareService_CacheHit(t *testing.T) {
 	}
 }
 
-func TestMiddlewareService_CacheMissFallsThrough(t *testing.T) {
+func TestMiddlewareService_Translate_CacheMissFallsThrough(t *testing.T) {
 	mc := &mockCache{getErr: cache.ErrCacheMiss}
 	mt := &mockTranslation{resp: &model.TranslationResponse{TranslatedText: "Hola"}}
 
@@ -95,7 +95,7 @@ func TestMiddlewareService_CacheMissFallsThrough(t *testing.T) {
 	}
 }
 
-func TestMiddlewareService_UpstreamError(t *testing.T) {
+func TestMiddlewareService_Translate_UpstreamError(t *testing.T) {
 	mc := &mockCache{getErr: cache.ErrCacheMiss}
 	mt := &mockTranslation{err: errors.New("timeout")}
 
@@ -103,6 +103,69 @@ func TestMiddlewareService_UpstreamError(t *testing.T) {
 	req := &model.TranslationRequest{Q: "Hello", Source: "en", Target: "es"}
 
 	_, _, err := svc.Translate(context.Background(), req)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+}
+
+func TestMiddlewareService_CheckAndUpdateTranslation_CacheHit_TTL_Valid(t *testing.T) {
+	ttl := 25 * time.Hour
+	mc := &mockCache{getTTLResp: &ttl, getTTLErr: nil}
+	mt := &mockTranslation{}
+
+	svc := service.NewMiddlewareService(mc, mt, zap.NewNop())
+	req := &model.TranslationRequest{Q: "Hello", Source: "en", Target: "es"}
+
+	err := svc.CheckAndUpdateTranslation(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if mc.setCalled {
+		t.Error("expected cache Set to be called")
+	}
+}
+
+func TestMiddlewareService_CheckAndUpdateTranslation_CacheHit_TTL_Invalid(t *testing.T) {
+	ttl := 15 * time.Hour
+	mc := &mockCache{getTTLResp: &ttl, getTTLErr: nil}
+	mt := &mockTranslation{}
+
+	svc := service.NewMiddlewareService(mc, mt, zap.NewNop())
+	req := &model.TranslationRequest{Q: "Hello", Source: "en", Target: "es"}
+
+	err := svc.CheckAndUpdateTranslation(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !mc.setCalled {
+		t.Error("expected cache Set to be called")
+	}
+}
+
+func TestMiddlewareService_CheckAndUpdateTranslation_CacheMissFallsThrough(t *testing.T) {
+	mc := &mockCache{getTTLErr: cache.ErrCacheMiss}
+	mt := &mockTranslation{resp: &model.TranslationResponse{TranslatedText: "Hola"}}
+
+	svc := service.NewMiddlewareService(mc, mt, zap.NewNop())
+	req := &model.TranslationRequest{Q: "Hello", Source: "en", Target: "es"}
+
+	err := svc.CheckAndUpdateTranslation(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !mc.setCalled {
+		t.Error("expected cache Set to be called")
+	}
+}
+
+func TestMiddlewareService_CheckAndUpdateTranslation_UpstreamError(t *testing.T) {
+	mc := &mockCache{getTTLErr: cache.ErrCacheMiss}
+	mt := &mockTranslation{err: errors.New("timeout")}
+
+	svc := service.NewMiddlewareService(mc, mt, zap.NewNop())
+	req := &model.TranslationRequest{Q: "Hello", Source: "en", Target: "es"}
+
+	err := svc.CheckAndUpdateTranslation(context.Background(), req)
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}

@@ -7,13 +7,14 @@ import (
 
 	"cached-translation-middleware/internal/cache"
 	"cached-translation-middleware/internal/model"
+	"cached-translation-middleware/internal/util"
 
 	"go.uber.org/zap"
 )
 
-// MiddlewareService orchestrates cache lookup and upstream translation.
 type MiddlewareService interface {
 	Translate(ctx context.Context, req *model.TranslationRequest) (*model.TranslationResponse, model.CacheSource, error)
+	CheckAndUpdateTranslation(ctx context.Context, req *model.TranslationRequest) error
 }
 
 type middlewareService struct {
@@ -22,7 +23,6 @@ type middlewareService struct {
 	logger      *zap.Logger
 }
 
-// NewMiddlewareService creates the cache-aside middleware orchestrator.
 func NewMiddlewareService(c cache.TranslationCache, t TranslationService, logger *zap.Logger) MiddlewareService {
 	return &middlewareService{
 		cache:       c,
@@ -32,7 +32,6 @@ func NewMiddlewareService(c cache.TranslationCache, t TranslationService, logger
 }
 
 func (s *middlewareService) Translate(ctx context.Context, req *model.TranslationRequest) (*model.TranslationResponse, model.CacheSource, error) {
-	// 1. Try cache first
 	cached, err := s.cache.Get(ctx, req)
 	if err == nil {
 		s.logger.Info("cache hit",
@@ -44,11 +43,9 @@ func (s *middlewareService) Translate(ctx context.Context, req *model.Translatio
 	}
 
 	if !errors.Is(err, cache.ErrCacheMiss) {
-		// Non-fatal: log the error and fall through to upstream
 		s.logger.Warn("cache get error, falling through to upstream", zap.Error(err))
 	}
 
-	// 2. Call upstream translation API
 	s.logger.Info("cache miss, calling upstream",
 		zap.String("source", req.Source),
 		zap.String("target", req.Target),
@@ -60,10 +57,42 @@ func (s *middlewareService) Translate(ctx context.Context, req *model.Translatio
 		return nil, "", fmt.Errorf("upstream translation failed: %w", err)
 	}
 
-	// 3. Persist result in cache (best-effort)
 	if setErr := s.cache.Set(ctx, req, resp); setErr != nil {
 		s.logger.Warn("failed to store translation in cache", zap.Error(setErr))
 	}
 
 	return resp, model.CacheSourceMiss, nil
+}
+
+func (s *middlewareService) CheckAndUpdateTranslation(ctx context.Context, req *model.TranslationRequest) error {
+	ttl, err := s.cache.GetTTL(ctx, req)
+	if err == nil && *ttl > util.OneDay {
+		s.logger.Info("valid cache, no need for update",
+			zap.String("source", req.Source),
+			zap.String("target", req.Target),
+			zap.String("q", req.Q),
+		)
+		return nil
+	}
+
+	if !errors.Is(err, cache.ErrCacheMiss) {
+		s.logger.Warn("cache get error, falling through to upstream", zap.Error(err))
+	}
+
+	s.logger.Info("cache miss, calling upstream",
+		zap.String("source", req.Source),
+		zap.String("target", req.Target),
+		zap.String("q", req.Q),
+	)
+
+	resp, err := s.translation.Translate(ctx, req)
+	if err != nil {
+		return fmt.Errorf("upstream translation failed: %w", err)
+	}
+
+	if setErr := s.cache.Set(ctx, req, resp); setErr != nil {
+		s.logger.Warn("failed to store translation in cache", zap.Error(setErr))
+	}
+
+	return nil
 }

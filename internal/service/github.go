@@ -10,16 +10,9 @@ import (
 	"cached-translation-middleware/internal/model"
 )
 
-type UserType string
-
-const (
-	UserTypeUser UserType = "users"
-	UserTypeOrg  UserType = "orgs"
-)
-
 // GithubService defines the contract for calling the upstream Github API.
 type GithubService interface {
-	GetRepos(ctx context.Context, userType UserType, login string) (*model.ListUserReposResponse, error)
+	GetRepos(ctx context.Context, userType model.UserType, login string) (*model.ListUserReposResponse, error)
 }
 
 type githubService struct {
@@ -35,7 +28,7 @@ func NewGithubService(apiURL string, client *http.Client) GithubService {
 	}
 }
 
-func (s *githubService) GetRepos(ctx context.Context, userType UserType, login string) (*model.ListUserReposResponse, error) {
+func (s *githubService) GetRepos(ctx context.Context, userType model.UserType, login string) (*model.ListUserReposResponse, error) {
 	url := strings.Join([]string{s.apiURL, string(userType), login, "repos"}, "/")
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
