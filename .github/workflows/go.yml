@@ -19,7 +19,7 @@ jobs:
         go-version: 1.26
 
     - name: Build server
-      run: server-build.sh
+      run: bash server-build.sh
 
     - name: Build batch
       run: bash batch-build.sh
