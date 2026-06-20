@@ -60,5 +60,5 @@ func main() {
 		logger.Warn("error closing Redis connection", zap.Error(err))
 	}
 
-	logger.Info("server exited gracefully")
+	logger.Info("process exited gracefully")
 }
