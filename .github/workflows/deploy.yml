@@ -1,4 +1,4 @@
-name: Go
+name: Deploy
 
 on:
   push:
@@ -26,3 +26,22 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+
+    - name: Create Release and Upload Binaries
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+           gh release create ${{ github.ref_name }} ./batch ./server --title "Release ${{ github.ref_name }}" --notes "Automatically generated binary."
+
+
+
+
+
+
+
+
+
+
+
+
+
