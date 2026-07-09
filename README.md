@@ -10,7 +10,7 @@ Para executar o projeto é necessário o Go instalado e configurado, siga as ins
 
 http://www.golangbr.org/doc/instalacao
 
-Antes de executar modifique o arquivo config.toml para apontar para o MongoDB instalado.
+Antes de executar, modifique o arquivo .env com as configurações (utilize o arquivo [.env.example](.env.example) como base).
 
 Após instalar o Go e configurar o arquivo config.toml compile o código, utilize o seguinte comando para isso:
 
