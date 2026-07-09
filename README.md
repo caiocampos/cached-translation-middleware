@@ -12,7 +12,11 @@ http://www.golangbr.org/doc/instalacao
 
 Antes de executar, modifique o arquivo .env com as configurações (utilize o arquivo [.env.example](.env.example) como base).
 
-Após instalar o Go e configurar o arquivo config.toml compile o código, utilize o seguinte comando para isso:
+Após instalar o Go e configurar o arquivo .env, instale as dependências com o seguinte comando:
+
+> go mod tidy
+
+Então compile o código, utilize o seguinte comando para isso:
 
 > go build cmd/server/main.go
 
