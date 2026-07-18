@@ -1,0 +1,26 @@
+name: Go
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: 1.26
+
+    - name: Build server
+      run: bash server-build.sh
+
+    - name: Build batch
+      run: bash batch-build.sh
+
+    - name: Test
+      run: go test -v ./...
