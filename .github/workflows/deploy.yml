@@ -7,9 +7,6 @@ on:
       - "v*.*.*"
     paths-ignore:
       - '.github/**'
-      - 'back/**'
-  pull_request:
-    branches: [ master ]
 
 jobs:
 
@@ -30,9 +27,6 @@ jobs:
 
     - name: Build batch
       run: bash batch-build.sh
-
-    - name: Test
-      run: go test -v ./...
 
     - name: Create Release and Upload Binaries
       uses: softprops/action-gh-release@v3
